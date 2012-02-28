@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+	<h2>Home</h2>
+	<div>
+		Welcome, {{ session.get("username") }}
+	</div>
+	<div>
+		<a href="{{ url_for('logout') }}">Logout</a>
+	</div>
+{% endblock %}
