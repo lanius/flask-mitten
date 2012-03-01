@@ -4,8 +4,10 @@ import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+import cookielib
 import unittest
 import re
+from itertools import chain
 
 import example.app
 
@@ -77,12 +79,8 @@ class MittenTestCase(unittest.TestCase):
         assert rv.headers['X-Content-Type-Options'] == 'nosniff'
 
     def parse_cookie(self, cookie_str):
-        cookie = {}
-        for s in cookie_str.split(';'):
-            kv = s.strip().split('=')
-            if len(kv) == 2:
-                cookie[kv[0]] = kv[1]
-        return cookie
+        parsed = cookielib.parse_ns_headers([cookie_str])
+        return dict(chain(*parsed))
 
     def get_csrf_token(self, html):
         pat = r'.*<input.*name="_csrf_token".*value="([a-z0-9\-]*)"'
