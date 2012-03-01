@@ -66,7 +66,7 @@ A  POST request is protected against CSRF automatically.
 
 If you want to exclude a route from CSRF protection, use a csrf_exempt decorator::
 
-    @csrf_exempt
+    @mitten.csrf_exempt
     @app.route('/public_api/', methods=['POST'])
     def public_api():
         return "result", 200

@@ -33,6 +33,7 @@ class Mitten(object):
         KVSessionExtension(store, app)
 
         csrf(app)
+        self.csrf_exempt = csrf_exempt
 
     def after_request(self, response):
         response.headers['Server'] = self.banner

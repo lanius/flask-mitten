@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.debug = False
 app.secret_key = 'dummy secret key'
 
-from flaskext.mitten import Mitten, csrf_exempt
+from flaskext.mitten import Mitten
 mitten = Mitten(app)  # apply Mitten
 
 
@@ -45,7 +45,7 @@ def logout():
     return redirect(url_for('home'))
 
 
-@csrf_exempt  # excluded from csrf protection
+@mitten.csrf_exempt  # excluded from csrf protection
 @app.route('/public_api/', methods=['POST'])
 def public_api():
     return "POST was received successfully.", 200
