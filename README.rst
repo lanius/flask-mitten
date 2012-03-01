@@ -11,6 +11,7 @@ Flask-Mitten supports Flask applications to prevent following threats.
 - Clickjacking
 - CSRF
 - Information disclosure through banner grabbing
+- JSON hijacking
 - Session fixation
 
 It bundles functions of following Flask extensions.
@@ -49,7 +50,7 @@ If you want to set your own banner, you can do it::
 Preventing Session Fixation
 ---------------------------
 
-After login, call a regenerate method of session::
+After login, call a regenerate method of session object::
 
     session.regenerate()
 
@@ -74,6 +75,16 @@ If you want to exclude a route from CSRF protection, use a csrf_exempt decorator
     @app.route('/public_api/', methods=['POST'])
     def public_api():
         return "result", 200
+
+Preventing JSON Hijacking
+-------------------------
+
+If you send a JSON response, you could use a json decorator to avoid JSON hijacking or rendering JSON responses by direct browsing::
+
+    @mitten.json
+    @app.route('/json_api/')
+    def json_api():
+        return jsonify(result='success')
 
 More
 ----
