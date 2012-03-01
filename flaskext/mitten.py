@@ -10,7 +10,7 @@
 """
 from __future__ import absolute_import
 
-from flask import _request_ctx_stack
+from flask import _request_ctx_stack, abort, request
 from flaskext.kvsession import KVSessionExtension
 from flaskext.csrf import csrf, csrf_exempt
 from simplekv.memory import DictStore
@@ -23,21 +23,44 @@ class Mitten(object):
             self.init_app(app)
 
     def init_app(self, app):
+        self.app = app
         self.banner = 'Welcome!'
         self.cookie_httponly = True
+        self._json_views = []
 
-        app.after_request(self.after_request)
+        self.app.before_request(self.before_request)
+        self.app.after_request(self.after_request)
 
         # Set other extentions to app
         store = DictStore()
-        KVSessionExtension(store, app)
+        KVSessionExtension(store, self.app)
 
-        csrf(app)
+        csrf(self.app)
         self.csrf_exempt = csrf_exempt
 
+    def before_request(self):
+        ctx = _request_ctx_stack.top
+        dest = self.app.view_functions.get(request.endpoint)
+        ctx.request_json = dest in self._json_views
+        if ctx.request_json:
+            if not request.is_xhr:
+                ctx.forbidden = True
+                abort(403)
+            else:
+                ctx.forbidden = False
+
     def after_request(self, response):
-        response.headers['Server'] = self.banner
-        response.headers['X-Frame-Options'] = 'DENY'
+        ctx = _request_ctx_stack.top
+        headers = response.headers
+        headers['Server'] = self.banner
+        headers['X-Frame-Options'] = 'DENY'
         if self.cookie_httponly and 'Set-Cookie' in response.headers:
-            response.headers['Set-Cookie'] += '; HttpOnly'
+            headers['Set-Cookie'] += '; HttpOnly'
+        if ctx.request_json and not ctx.forbidden:
+            headers['Content-Type'] = 'application/json; charset=utf-8'
+            headers['X-Content-Type-Options'] = 'nosniff'
         return response
+
+    def json(self, view):
+        self._json_views.append(view)
+        return view

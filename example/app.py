@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, request, session, render_template, url_for, redirect
+from flask import (Flask, request, session, render_template, url_for, redirect,
+                   jsonify)
 
 app = Flask(__name__)
-app.debug = False
+app.debug = True
 app.secret_key = 'dummy secret key'
 
 from flaskext.mitten import Mitten
@@ -51,7 +52,13 @@ def public_api():
     return "POST was received successfully.", 200
 
 
-@app.errorhandler(400)
+@mitten.json
+@app.route('/json_api/')
+def json_api():
+    return jsonify(result='success')
+
+
+@app.errorhandler(500)
 def exception_handler(error):
     return render_template('error.html')
 

@@ -18,7 +18,7 @@ class MittenTestCase(unittest.TestCase):
 
     def test_banner(self):
         rv = self.app.get('/')
-        assert 'Welcom' in rv.headers['Server']
+        assert 'Welcome' in rv.headers['Server']
 
     def test_custom_banner(self):
         custom_banner = 'Custom Banner'
@@ -58,11 +58,23 @@ class MittenTestCase(unittest.TestCase):
             'username': 'myname',
             'password': 'mypass'
         }, follow_redirects=True)
-        assert 'Error' in rv.data
+        assert 'Bad Request' in rv.data
 
     def test_csrf_exempt(self):
         rv = self.app.post('/public_api/')
         assert 'success' in rv.data
+
+    def test_json_fail(self):
+        rv = self.app.get('/json_api/')
+        assert 'Forbidden' in rv.data
+
+    def test_json_success(self):
+        headers = [('X-Requested-With', 'XMLHttpRequest')]
+        rv = self.app.get('/json_api/', headers=headers)
+        assert 'success' in rv.data
+        assert 'application/json' in rv.headers['Content-Type']
+        assert 'charset=utf-8' in rv.headers['Content-Type']
+        assert rv.headers['X-Content-Type-Options'] == 'nosniff'
 
     def parse_cookie(self, cookie_str):
         cookie = {}
