@@ -55,6 +55,10 @@ After login, call a regenerate method of session::
 
 The session ID is regenerated, and it prevents session fixation.
 
+To discard a session, call a destroy method::
+
+    session.destroy()
+
 Preventing CSRF
 ---------------
 
