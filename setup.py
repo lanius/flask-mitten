@@ -10,7 +10,7 @@ for preventing some of the basic threats."""
 
 setup(
     name='Flask-Mitten',
-    version='0.1',
+    version='0.2',
     url='https://github.com/lanius/flask-mitten',
     license='BSD',
     author='lanius',
