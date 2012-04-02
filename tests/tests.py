@@ -22,26 +22,26 @@ class MittenTestCase(unittest.TestCase):
 
     def test_banner(self):
         rv = self.app.get('/')
-        assert 'Welcome' in rv.headers['Server']
+        self.assertTrue('Welcome' in rv.headers['Server'])
 
     def test_custom_banner(self):
         custom_banner = 'Custom Banner'
         self.mitten.banner = custom_banner
         rv = self.app.get('/')
-        assert rv.headers['Server'] == custom_banner
+        self.assertEqual(rv.headers['Server'], custom_banner)
 
     def test_clickjacking(self):
         rv = self.app.get('/')
-        assert rv.headers['X-Frame-Options'] == 'DENY'
+        self.assertEqual(rv.headers['X-Frame-Options'], 'DENY')
 
     def test_httponly(self):
         rv = self.app.get('/login/')
-        assert 'HttpOnly' in rv.headers['Set-Cookie']
+        self.assertTrue('HttpOnly' in rv.headers['Set-Cookie'])
 
     def test_httponly_false(self):
         self.mitten.cookie_httponly = False
         rv = self.app.get('/login/')
-        assert 'HttpOnly' not in rv.headers['Set-Cookie']
+        self.assertTrue('HttpOnly' not in rv.headers['Set-Cookie'])
 
     def test_session_fixation(self):
         rv_before = self.app.get('/login/')
@@ -54,8 +54,8 @@ class MittenTestCase(unittest.TestCase):
             '_csrf_token': csrf_token
         }, follow_redirects=True)
         cookie_after = self.parse_cookie(rv_after.headers['Set-Cookie'])
-        assert 'Welcome' in rv_after.data  # login was success
-        assert cookie_before['session'] != cookie_after['session']
+        self.assertTrue('Welcome' in rv_after.data)  # login was success
+        self.assertNotEqual(cookie_before['session'], cookie_after['session'])
 
     def test_csrf(self):
         rv = self.app.post('/login/', data={
@@ -66,7 +66,7 @@ class MittenTestCase(unittest.TestCase):
 
     def test_csrf_exempt(self):
         rv = self.app.post('/public_api/')
-        assert 'success' in rv.data
+        self.assertTrue('success' in rv.data)
 
     def test_json_fail(self):
         rv = self.app.get('/json_api/')
@@ -75,14 +75,14 @@ class MittenTestCase(unittest.TestCase):
     def test_json_success(self):
         headers = [('X-Requested-With', 'XMLHttpRequest')]
         rv = self.app.get('/json_api/', headers=headers)
-        assert 'success' in rv.data
-        assert 'application/json' in rv.headers['Content-Type']
-        assert 'charset=utf-8' in rv.headers['Content-Type']
-        assert rv.headers['X-Content-Type-Options'] == 'nosniff'
+        self.assertTrue('success' in rv.data)
+        self.assertTrue('application/json' in rv.headers['Content-Type'])
+        self.assertTrue('charset=utf-8' in rv.headers['Content-Type'])
+        self.assertEqual(rv.headers['X-Content-Type-Options'], 'nosniff')
 
     def test_xss_protection(self):
         rv = self.app.get('/')
-        assert rv.headers['X-XSS-Protection'] == '1'
+        self.assertEqual(rv.headers['X-XSS-Protection'], '1')
 
     def parse_cookie(self, cookie_str):
         parsed = cookielib.parse_ns_headers([cookie_str])
