@@ -9,6 +9,8 @@ import unittest
 import re
 from itertools import chain
 
+from werkzeug.exceptions import BadRequest, Forbidden
+
 import example.app
 
 
@@ -56,19 +58,21 @@ class MittenTestCase(unittest.TestCase):
         assert cookie_before['session'] != cookie_after['session']
 
     def test_csrf(self):
-        rv = self.app.post('/login/', data={
-            'username': 'myname',
-            'password': 'mypass'
-        }, follow_redirects=True)
-        assert 'Bad Request' in rv.data
+        def post():
+            self.app.post('/login/', data={
+                'username': 'myname',
+                'password': 'mypass'
+                }, follow_redirects=True)
+        self.assertRaises(BadRequest, post)
 
     def test_csrf_exempt(self):
         rv = self.app.post('/public_api/')
         assert 'success' in rv.data
 
     def test_json_fail(self):
-        rv = self.app.get('/json_api/')
-        assert 'Forbidden' in rv.data
+        def get():
+            self.app.get('/json_api/')
+        self.assertRaises(Forbidden, get)
 
     def test_json_success(self):
         headers = [('X-Requested-With', 'XMLHttpRequest')]
