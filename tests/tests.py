@@ -58,21 +58,19 @@ class MittenTestCase(unittest.TestCase):
         assert cookie_before['session'] != cookie_after['session']
 
     def test_csrf(self):
-        def post():
-            self.app.post('/login/', data={
-                'username': 'myname',
-                'password': 'mypass'
-            }, follow_redirects=True)
-        self.assertRaises(BadRequest, post)
+        rv = self.app.post('/login/', data={
+            'username': 'myname',
+            'password': 'mypass'
+        }, follow_redirects=True)
+        self.assertEqual(rv.status, '400 BAD REQUEST')
 
     def test_csrf_exempt(self):
         rv = self.app.post('/public_api/')
         assert 'success' in rv.data
 
     def test_json_fail(self):
-        def get():
-            self.app.get('/json_api/')
-        self.assertRaises(Forbidden, get)
+        rv = self.app.get('/json_api/')
+        self.assertEqual(rv.status, '403 FORBIDDEN')
 
     def test_json_success(self):
         headers = [('X-Requested-With', 'XMLHttpRequest')]
