@@ -54,6 +54,7 @@ class Mitten(object):
         headers = response.headers
         headers['Server'] = self.banner
         headers['X-Frame-Options'] = 'DENY'
+        headers['X-XSS-Protection'] = '1'
         if self.cookie_httponly and 'Set-Cookie' in response.headers:
             headers['Set-Cookie'] += '; HttpOnly'
         if ctx.request_json and not ctx.forbidden:

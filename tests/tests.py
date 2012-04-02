@@ -62,7 +62,7 @@ class MittenTestCase(unittest.TestCase):
             self.app.post('/login/', data={
                 'username': 'myname',
                 'password': 'mypass'
-                }, follow_redirects=True)
+            }, follow_redirects=True)
         self.assertRaises(BadRequest, post)
 
     def test_csrf_exempt(self):
@@ -81,6 +81,10 @@ class MittenTestCase(unittest.TestCase):
         assert 'application/json' in rv.headers['Content-Type']
         assert 'charset=utf-8' in rv.headers['Content-Type']
         assert rv.headers['X-Content-Type-Options'] == 'nosniff'
+
+    def test_xss_protection(self):
+        rv = self.app.get('/')
+        assert rv.headers['X-XSS-Protection'] == '1'
 
     def parse_cookie(self, cookie_str):
         parsed = cookielib.parse_ns_headers([cookie_str])
