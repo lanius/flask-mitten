@@ -44,24 +44,17 @@ class MittenTestCase(unittest.TestCase):
         self.assertTrue('HttpOnly' not in rv.headers['Set-Cookie'])
 
     def test_session_fixation(self):
-        rv_before = self.app.get('/login/')
-        cookie_before = self.parse_cookie(rv_before.headers['Set-Cookie'])
-        csrf_token = self.get_csrf_token(rv_before.data)
+        get_login_rv = self.app.get('/login/')
+        before_session_id = self.get_session_id(get_login_rv)
+        csrf_token = self.get_csrf_token(get_login_rv)
 
-        rv_after = self.app.post('/login/', data={
-            'username': 'myname',
-            'password': 'mypass',
-            '_csrf_token': csrf_token
-        }, follow_redirects=True)
-        cookie_after = self.parse_cookie(rv_after.headers['Set-Cookie'])
-        self.assertTrue('Welcome' in rv_after.data)  # login was success
-        self.assertNotEqual(cookie_before['session'], cookie_after['session'])
+        post_login_rv = self.login(csrf_token)
+        after_session_id = self.get_session_id(post_login_rv)
+        self.assertTrue('Welcome' in post_login_rv.data)  # login was success
+        self.assertNotEqual(before_session_id, after_session_id)
 
     def test_csrf(self):
-        rv = self.app.post('/login/', data={
-            'username': 'myname',
-            'password': 'mypass'
-        }, follow_redirects=True)
+        rv = self.login()
         self.assertEqual(rv.status, '400 BAD REQUEST')
 
     def test_csrf_exempt(self):
@@ -84,13 +77,27 @@ class MittenTestCase(unittest.TestCase):
         rv = self.app.get('/')
         self.assertEqual(rv.headers['X-XSS-Protection'], '1')
 
+    def get_login_csrf_token(self):
+        rv = self.app.get('/login/')
+        return self.get_csrf_token(rv)
+
+    def login(self, csrf_token=None):
+        data = {'username': 'myname', 'password': 'mypass'}
+        if csrf_token:
+            data['_csrf_token'] = csrf_token
+        return self.app.post('/login/', data=data, follow_redirects=True)
+
+    def get_csrf_token(self, rv):
+        pat = r'.*<input.*name="_csrf_token".*value="([a-z0-9\-]*)"'
+        return re.match(pat, rv.data.replace('\n', '')).group(1)
+
+    def get_session_id(self, rv):
+        cookie = self.parse_cookie(rv.headers['Set-Cookie'])
+        return cookie['session']
+
     def parse_cookie(self, cookie_str):
         parsed = cookielib.parse_ns_headers([cookie_str])
         return dict(chain(*parsed))
-
-    def get_csrf_token(self, html):
-        pat = r'.*<input.*name="_csrf_token".*value="([a-z0-9\-]*)"'
-        return re.match(pat, html.replace('\n', '')).group(1)
 
 
 if __name__ == '__main__':
